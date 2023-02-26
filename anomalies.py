@@ -22,7 +22,7 @@ def preprocess(path='SKAB/anomaly-free/anomaly-free.csv'):
     scaler.fit(data)
     rfm_norm = scaler.transform(data)
     rfm_norm = pd.DataFrame(rfm_norm, index=data.index, columns=data.columns)
-    return rfm_norm
+    return rfm_norm, rfm_data
 
 
 def num_clusters(df):
@@ -36,33 +36,33 @@ def num_clusters(df):
     plt.show()
 
 
-def get_clusters(df, n_clusters=5):
+def get_clusters(rfm_data, df, n_clusters=5):
     kmeans = KMeans(n_clusters=n_clusters, random_state=1)
     kmeans.fit(df)
     cluster_labels = kmeans.labels_
     # добавляю колонку 'Кластеры' в датасет с оригинальными данными
-    rfm_data = df.assign(Cluster=cluster_labels)
+    rfm_data = rfm_data.assign(Cluster=cluster_labels)
     # рассчитываю средние значения переменных и размер каждого кластера
-    rfm_data_grouped = rfm_data.groupby('Cluster').agg(
+    rfm_data_grouped = rfm_data.groupby(['Cluster']).agg(
         {'Accelerometer1RMS': 'mean', 'Accelerometer2RMS': 'mean',
          'Current': 'mean', 'Pressure': 'mean',
          'Temperature': 'mean', 'Thermocouple': 'mean',
          'Voltage': 'mean', 'Volume Flow RateRMS': 'mean'})
-    # добавляю колонку 'Кластер'
-    rfm_norm_clusters = df.assign(Cluster=cluster_labels)
-    sns.heatmap(rfm_data_grouped)
     df = pd.DataFrame(df,
                       index=rfm_data.index,
                       columns=rfm_data.columns)
-    df['Cluster'] = rfm_data_grouped['Cluster']
+    df['Cluster'] = rfm_data['Cluster']
     data_melt = pd.melt(df.reset_index(),
-                        id_vars=['CustomerID', 'Cluster'],
+                        id_vars=['Cluster'],
                         value_vars=['Accelerometer1RMS', 'Accelerometer2RMS',
                                     'Current', 'Pressure', 'Temperature', 'Thermocouple',
                                     'Voltage', 'Volume Flow RateRMS'],
-                        var_name='Attribute', value_name='Value')
+                        var_name='Attribute',
+                        value_name='Value')
     plt.title('Snake plot of standardized variables')
     sns.lineplot(x="Attribute",
                  y="Value",
-                 hue='Cluster',
+                 hue="Cluster",
                  data=data_melt)
+    plt.show()
+
