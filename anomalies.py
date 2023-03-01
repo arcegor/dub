@@ -5,6 +5,7 @@ from sklearn.preprocessing import StandardScaler
 from sklearn import preprocessing
 from matplotlib import pyplot as plt
 import seaborn as sns
+from sklearn.decomposition import PCA
 
 
 def preprocess(path='SKAB/anomaly-free/anomaly-free.csv'):
@@ -137,15 +138,20 @@ def anomaly_params(data, kmeans):
     anomaly_2 = anomaly_anomaly[(anomaly_anomaly['Fraud_score'] >= 2)]
     print('Количество измерений с аномальным поведением (1 и более аномалий): ', len(anomaly_anomaly))
     print('Количество измерений с аномальным поведением (2 и более аномалии): ', anomaly_2.shape[0])
+    graphic(data.iloc[:, :-1], kmeans)
 
-    # # Getting the Centroids
-    # centroids = kmeans.cluster_centers_
-    # u_labels = np.unique(label)
-    #
-    # # plotting the results:
-    #
-    # for i in u_labels:
-    #     plt.scatter(df[label == i, 0], df[label == i, 1], label=i)
-    # plt.scatter(centroids[:, 0], centroids[:, 1], s=80, color='k)
-    # plt.legend()
-    # plt.show()
+
+def graphic(data, kmeans):
+    pca = PCA(2)
+    label = kmeans.predict(data)
+    u_labels = np.unique(label)
+    df = pca.fit_transform(data)
+    centroids = kmeans.cluster_centers_
+    for i in u_labels:
+        plt.scatter(df[label == i, 0], df[label == i, 1], label=i)
+    plt.scatter(centroids[:, 0], centroids[:, 1], s=80, color='k')
+    plt.legend()
+    plt.show()
+
+
+
