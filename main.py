@@ -4,5 +4,9 @@ import anomalies
 if __name__ == '__main__':
     df, orig = anomalies.preprocess()
     #anomalies.num_clusters(df)
-    anomalies.get_clusters(orig, df)
+    df, orig, kmeans = anomalies.get_clusters(orig, df)
+    #anomalies.snake_plot(df)
+    #anomalies.heatmap(df, orig)
+    anomalies.anomaly_params(df, kmeans)
+
 
