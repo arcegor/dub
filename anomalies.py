@@ -8,7 +8,7 @@ from sklearn.metrics import precision_score, recall_score, roc_auc_score, accura
 from sklearn.preprocessing import StandardScaler
 
 
-def preprocess(path='SKAB/other/9.csv'):
+def preprocess(path):
     rfm_data = pd.read_csv(path, delimiter=';')
     data = rfm_data.iloc[:, 1:-2]
     y = rfm_data.iloc[:, -2]
@@ -37,7 +37,7 @@ def num_clusters(df):
     # Рассчитываю оптимальное количество кластеров используя Elbow criterion метод
     sse = {}
     for k in range(1, 11):
-        kmeans = KMeans(n_clusters=k, random_state=42)
+        kmeans = KMeans(n_clusters=k)
         kmeans.fit(df)
         sse[k] = kmeans.inertia_
     sns.pointplot(x=list(sse.keys()), y=list(sse.values()))
@@ -166,10 +166,10 @@ def f(x):
         return 0
 
 
-def main(path='SKAB/other/9.csv', n_clusters=5):
+def main(path, n_clusters=5):
     data, _, y = preprocess(path)
     x = data
-    kmeans = KMeans(n_clusters=n_clusters, random_state=1)
+    kmeans = KMeans(n_clusters=n_clusters)
     kmeans.fit(x)
     res = anomaly_params(x, kmeans)
     res = res.iloc[:, -1].apply(f)
@@ -186,14 +186,14 @@ def main(path='SKAB/other/9.csv', n_clusters=5):
     return result, y, res
 
 
-def best_clusters():
+def best_clusters(path):
     result = []
     max = 0
     num_clusters = 0
     y = 0
     res_best = 0
     for i in range(1, 11):
-        score, y, res = main(n_clusters=i)
+        score, y, res = main(path, n_clusters=i)
         if score[0] > max:
             max = score[0]
             res_best = res
@@ -204,3 +204,15 @@ def best_clusters():
     plt.show()
     return result[num_clusters], num_clusters
 
+
+def lokot(path):
+    data, _, y = preprocess(path)
+    num_clusters(data)
+
+
+def best_clusters_prefind(path, n_clusters):
+    score, y, res_best = main(path, n_clusters)
+    fpr, tpr, thresholds = metrics.roc_curve(y, res_best)
+    roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr).plot()
+    plt.show()
+    return score, n_clusters
