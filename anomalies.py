@@ -1,12 +1,11 @@
 import numpy as np
 import pandas as pd
-from sklearn.cluster import KMeans
-from sklearn.preprocessing import StandardScaler
-from sklearn import preprocessing
-from matplotlib import pyplot as plt
 import seaborn as sns
-from sklearn.decomposition import PCA
-from sklearn.metrics import precision_score, recall_score, roc_auc_score, accuracy_score
+from matplotlib import pyplot as plt
+from sklearn import metrics
+from sklearn.cluster import KMeans
+from sklearn.metrics import precision_score, recall_score, roc_auc_score, accuracy_score, RocCurveDisplay
+from sklearn.preprocessing import StandardScaler
 
 
 def preprocess(path='SKAB/other/9.csv'):
@@ -43,8 +42,6 @@ def num_clusters(df):
         sse[k] = kmeans.inertia_
     sns.pointplot(x=list(sse.keys()), y=list(sse.values()))
     plt.show()
-
-
 
 
 # def get_clusters(rfm_data, df, n_clusters=5):
@@ -144,8 +141,9 @@ def anomaly_params(data, kmeans):
     # anomaly_2 = anomaly_anomaly[(anomaly_anomaly['Fraud_score'] >= 2)]
     # print('Количество измерений с аномальным поведением (1 и более аномалий): ', len(anomaly_anomaly))
     # print('Количество измерений с аномальным поведением (2 и более аномалии): ', anomaly_2.shape[0])
-    #graphic(data.iloc[:, :-1], kmeans)
+    # graphic(data.iloc[:, :-1], kmeans)
     return anomaly_matrix
+
 
 #
 # def graphic(data, kmeans):
@@ -185,24 +183,24 @@ def main(path='SKAB/other/9.csv', n_clusters=5):
     # print('f1 = ', f1)
     # print('roc = ', roc)
     result = [accuracy, precision, recall, f1, roc]
-    return result
+    return result, y, res
 
 
 def best_clusters():
-    res = []
+    result = []
     max = 0
     num_clusters = 0
+    y = 0
+    res_best = 0
     for i in range(1, 11):
-        score = main(n_clusters=i)
+        score, y, res = main(n_clusters=i)
         if score[0] > max:
             max = score[0]
+            res_best = res
             num_clusters = i
-        #print(score)
-        res.append(score)
-    return res[num_clusters], num_clusters
-
-
-
-
-
+        result.append(score)
+    fpr, tpr, thresholds = metrics.roc_curve(y, res_best)
+    roc_display = RocCurveDisplay(fpr=fpr, tpr=tpr).plot()
+    plt.show()
+    return result[num_clusters], num_clusters
 
